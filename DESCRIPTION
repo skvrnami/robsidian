@@ -1,0 +1,27 @@
+Package: robsidian
+Type: Package
+Title: Tools for loading and processing your Obsidian vault in R
+Version: 0.1.0
+Authors@R:
+    c(person(given = "Michael",
+            family = "Škvrňák",
+            role = c("aut", "cre"),
+            email = "michael.skvrnak@protonmail.com",
+            comment = c(ORCID = "0000-0003-4647-4095")))
+Description: More about what it does (maybe more than one line)
+    Use four spaces when indenting paragraphs within the Description.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+RoxygenNote: 7.2.3
+Imports: 
+    dplyr,
+    magrittr,
+    purrr,
+    readtext,
+    stringr,
+    tidygraph,
+    tidyr
