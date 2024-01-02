@@ -35,25 +35,25 @@ find_smallest_unique_substring <- function(paths){
 
 # when doc_id is duplicated insert folder path from full_path column into doc_id
 resolve_duplicated_doc_ids <- function(df){
-    not_duplicated <- df %>%
-        dplyr::group_by(doc_id) %>%
-        dplyr::filter(dplyr::n() == 1) %>%
+    not_duplicated <- df |>
+        dplyr::group_by(doc_id) |>
+        dplyr::filter(dplyr::n() == 1) |>
         dplyr::ungroup()
 
-    duplicated <- df %>%
-        dplyr::group_by(doc_id) %>%
-        dplyr::filter(dplyr::n() > 1) %>%
+    duplicated <- df |>
+        dplyr::group_by(doc_id) |>
+        dplyr::filter(dplyr::n() > 1) |>
         dplyr::ungroup()
 
     groups <- unique(duplicated$doc_id)
     deduplicated <- purrr::map_df(groups, function(x) {
-        group_docs <- duplicated %>%
-          dplyr::filter(doc_id == x) %>%
+        group_docs <- duplicated |>
+          dplyr::filter(doc_id == x) |>
           dplyr::mutate(full_path = paste0(full_path, doc_id))
 
         unique_doc_id <- find_smallest_unique_substring(group_docs$full_path)
 
-        group_docs %>%
+        group_docs |>
           dplyr::mutate(doc_id = unique_doc_id)
 
     })
@@ -73,8 +73,8 @@ read_vault <- function(path){
 
     out <- purrr::map_df(files, function(x) readtext::readtext(x, verbosity = 0)) |>
       dplyr::mutate(file_name = doc_id,
-                    full_path = purrr::map2_chr(doc_id, files, function(x, y) gsub(x, "", y))) %>%
-      dplyr::mutate(doc_id = gsub("\\.(md|canvas)$", "", file_name)) %>%
+                    full_path = purrr::map2_chr(doc_id, files, function(x, y) gsub(x, "", y))) |>
+      dplyr::mutate(doc_id = gsub("\\.(md)$", "", file_name)) |>
       dplyr::select(-file_name)
 
     if(anyDuplicated(out$doc_id)){
@@ -85,9 +85,9 @@ read_vault <- function(path){
 }
 
 get_wikilinks <- function(x){
-  unlist(stringr::str_extract_all(x, pattern = "\\[\\[[^\\[]+\\]\\]")) %>%
-    gsub("(\\[\\[|\\]\\])", "", .) %>%
-    gsub("(#|\\|){1}[^#|]+$", "", .)
+  unlist(stringr::str_extract_all(x, pattern = "\\[\\[[^\\[]+\\]\\]")) |>
+    gsub("(\\[\\[|\\]\\])", "", x = _) |>
+    gsub("(#|\\|){1}[^#|]+$", "", x = _)
 }
 
 #' Create tidygraph from vault
@@ -96,33 +96,18 @@ get_wikilinks <- function(x){
 #'
 #' @export
 create_graph <- function(vault){
-  vault_wikilinks <- vault %>%
-    mutate(wikilinks = purrr::map(text, get_wikilinks)) %>%
+  vault_wikilinks <- vault |>
+    dplyr::mutate(wikilinks = purrr::map(text, get_wikilinks)) |>
     tidyr::unnest(wikilinks)
 
   notes <- data.frame(
-      name = unique(c(vault_wikilinks$doc_id, vault_wikilinks$wikilinks))) %>%
-      mutate(id = row_number())
-  edges <- vault_wikilinks %>%
-      dplyr::select(doc_id, wikilinks) %>%
-      dplyr::left_join(., notes %>% dplyr::rename(from = id), by = c("doc_id"="name")) %>%
-      dplyr::left_join(., notes %>% dplyr::rename(to = id), by = c("wikilinks"="name"))
+      name = unique(c(vault_wikilinks$doc_id, vault_wikilinks$wikilinks))) |>
+      dplyr::mutate(id = dplyr::row_number())
+  edges <- vault_wikilinks |>
+      dplyr::select(doc_id, wikilinks) |>
+      dplyr::left_join(x = _, notes |> dplyr::rename(from = id), by = c("doc_id"="name")) |>
+      dplyr::left_join(x = _, notes |> dplyr::rename(to = id), by = c("wikilinks"="name"))
 
   tidygraph::tbl_graph(nodes = notes,
             edges = edges)
 }
-
-# path <- "~/github/centralni-mozek-lidstva"
-#
-# vault <- read_vault(path)
-# get_wikilinks(vault$text[8])
-#
-# vault_wikilinks <- vault %>%
-#   mutate(wikilinks = purrr::map(text, get_wikilinks)) %>%
-#   tidyr::unnest(wikilinks)
-#
-# vault_gph <- create_graph(vault)
-# ggraph(vault_gph, layout = 'kk') +
-#     +     geom_edge_fan(show.legend = FALSE) +
-#     +     geom_node_point() +
-#     +     theme_graph(foreground = 'steelblue', fg_text_colour = 'white')

@@ -1,0 +1,60 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# robsidian
+
+<!-- badges: start -->
+<!-- badges: end -->
+
+The goal of robsidian is to ...
+
+## Installation
+
+You can install the development version of robsidian from [GitHub](https://github.com/) with:
+
+``` r
+# install.packages("devtools")
+devtools::install_github("skvrnami/robsidian")
+```
+
+## Example
+
+This is a basic example which shows you how to solve a common problem:
+
+```{r example, eval=FALSE}
+library(ggraph)
+library(robsidian)
+
+vault <- read_vault("~/vault")
+```
+
+```{r, echo=FALSE}
+library(ggraph)
+library(robsidian)
+vault <- read_vault("~/github/centralni-mozek-lidstva")
+```
+
+
+```{r}
+head(vault)
+
+vault_gph <- create_graph(vault)
+ggraph(vault_gph, layout = 'kk') +
+    geom_edge_fan(show.legend = FALSE) +
+    geom_node_point() +
+    theme_graph(foreground = 'steelblue', fg_text_colour = 'white')
+```
+
+
